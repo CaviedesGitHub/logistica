@@ -1,3 +1,6 @@
+from datetime import datetime
+from datetime import timedelta
+import uuid
 from flask import request
 from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identity
 from flask_restful import Resource
@@ -6,41 +9,76 @@ from flask_login import (current_user, login_user, logout_user, login_required)
 from auth_ms.modelos.modelos import db, Usuario, UsuarioSchema
 
 usuario_schema = UsuarioSchema()
+
+access_token_expires = timedelta(minutes=30)
+
 class VistaSignIn(Resource):   
     def post(self):
         print('VistaSignIn')
-        if request.json['password']==request.json['password2']:
-            usuario=Usuario.query.filter(Usuario.email == request.json["email"]).first()
-            if usuario is None:
-                print(request.json["is_admin"])
-                nuevo_usuario = Usuario(name=request.json["name"], email=request.json["email"], is_admin=eval(request.json["is_admin"]))
-                nuevo_usuario.set_password(request.json["password"])
-                db.session.add(nuevo_usuario)
-                db.session.commit()
-                login_user(nuevo_usuario)
-                token_de_acceso = create_access_token(identity=nuevo_usuario.id)
-                return {"mensaje": "usuario creado exitosamente", "token": token_de_acceso, "id": nuevo_usuario.id}
-            else:
-                return {"mensaje": "Usuario Ya Existe"}
+        username=request.json.get('username')
+        email=request.json.get('email')
+        password=request.json.get('password')
+        if username==None or email==None or password==None:
+           return {"mensaje": "Falta(n) uno o mas campos en la peticion"}, 400
         else:
-            return {"mensaje": "No coincide password de confirmación"}
+           usuario=Usuario.query.filter(Usuario.email == request.json["email"]).first() 
+           if usuario is None:
+              usuario=Usuario.query.filter(Usuario.username == request.json["username"]).first() 
+              if usuario is None:
+                 nuevo_usuario = Usuario(username=request.json["username"], email=request.json["email"])
+                 nuevo_usuario.salt = str(uuid.uuid4())
+                 nuevo_usuario.set_password(request.json["password"]+nuevo_usuario.salt) 
+                 nuevo_usuario.expireAt=datetime.now()
+                 nuevo_usuario.createdAt=datetime.now()
+                 db.session.add(nuevo_usuario)
+                 db.session.commit()
+                 #nuevo_usuario.expireAt=datetime.utcnow() + timedelta(minutes = access_token_expires)
+                 #token_de_acceso = create_access_token(identity=nuevo_usuario.id, expires_delta=access_token_expires)
+                 #nuevo_usuario.token=token_de_acceso
+                 #db.session.add(nuevo_usuario)
+                 #db.session.commit()
+                 return {"id": nuevo_usuario.id, "createdAt": nuevo_usuario.createdAt.isoformat()}, 201
+              else:
+                 return {"mensaje": "username ya existe."}, 412  
+           else:
+              return {"mensaje": "email ya existe."}, 412
 
 class VistaLogIn(Resource):
     def post(self):
-        usuario = Usuario.query.filter(Usuario.email == request.json["email"]).first()
-        db.session.commit()
-        if usuario is not None and usuario.authenticate(request.json["password"]):
-            login_user(usuario)
-            token_de_acceso = create_access_token(identity=usuario.id)
-            return {"mensaje": "Inicio de sesión exitoso", "token": token_de_acceso}
+        if request.json.get('username')==None or request.json.get('password')==None:
+           return {"mensaje": "Falta(n) uno o mas campos en la peticion"}, 400
         else:
-            return {"mensaje":"LogIn Incorrecto."}, 404
+           usuario = Usuario.query.filter(Usuario.username == request.json["username"]).first()
+           if usuario is not None:
+              db.session.commit()
+              if usuario.authenticate(request.json["password"]+usuario.salt):
+                 login_user(usuario)
+                 print(type(usuario.expireAt))
+                 print(usuario.expireAt)
+                 print(type(datetime.now()))
+                 print(datetime.now())
+                 if usuario.expireAt>datetime.now():
+                    return {"idaa":usuario.id, "token":usuario.token, "expireAt":usuario.expireAt.isoformat()}, 200
+                 else:
+                    usuario.expireAt=datetime.now() + timedelta(minutes = 30)
+                    token_de_acceso = create_access_token(identity=usuario.id, expires_delta=access_token_expires)
+                    usuario.token=token_de_acceso
+                    db.session.add(usuario)
+                    db.session.commit()
+                    return {"idbb":usuario.id, "token":usuario.token, "expireAt":usuario.expireAt.isoformat()}, 200
+              else:
+                 return {"mensaje":"LogIn Incorrecto."}, 404
+           else:
+              return {"mensaje":"LogIn Incorrecto."}, 404
 
 class VistaLogOut(Resource):
     def post(self):
         logout_user()
         return {"mensaje":"LogOut Exitoso."}
 
+class VistaUser(Resource):
+    def get(self):
+        return {}, 200
 
 class VistaUsuario(Resource):   
     def get(self, id_usuario):
@@ -77,4 +115,4 @@ class VistaUsuarios(Resource):
 class VistaPing(Resource):
     def get(self):
         print("pong")
-        return {"Mensaje":"Pong"}
+        return {"Mensaje":"Pong"}, 200

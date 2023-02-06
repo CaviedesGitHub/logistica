@@ -22,12 +22,12 @@ def load_user(user_id):
 
 
 api = Api(app)
-api.add_resource(VistaSignIn, '/api/auth/signup')
-api.add_resource(VistaLogIn, '/api/auth/login')
-api.add_resource(VistaLogOut, '/api/auth/logout')
-api.add_resource(VistaUsuario, '/usuario/<int:id_usuario>')
-api.add_resource(VistaUsuarios, '/usuarios')
-api.add_resource(VistaPing, '/ping')
+api.add_resource(VistaSignIn, '/users/')
+api.add_resource(VistaLogIn, '/users/auth')
+#api.add_resource(VistaLogOut, '/users/auth/logout')
+#api.add_resource(VistaUsuario, '/usuario/<int:id_usuario>')
+#api.add_resource(VistaUsuarios, '/usuarios')
+api.add_resource(VistaPing, '/users/ping')
 
 
 jwt = JWTManager(app)
