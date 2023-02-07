@@ -172,11 +172,8 @@ class testOffers(TestCase):
         solicitud_nueva_oferta=self.client.post(endpoint_ofertas, 
                                                 data=json.dumps(nueva_oferta), 
                                                 headers=headers)
-        print(solicitud_nueva_oferta.status_code)
         respuesta_nueva_oferta=json.loads(solicitud_nueva_oferta.get_data())
         self.offerId=int(respuesta_nueva_oferta["id"])
-        print(respuesta_nueva_oferta)
-        # OFFERID
         self.assertEqual(solicitud_nueva_oferta.status_code, 201)
     
     def test_consultar_oferta(self):
@@ -189,7 +186,6 @@ class testOffers(TestCase):
 
         solicitud_oferta=self.client.get(endpoint_ofertas, headers=headers)
         respuesta_nueva_oferta=json.loads(solicitud_oferta.get_data())
-        print(respuesta_nueva_oferta)
         self.assertEqual(solicitud_oferta.status_code, 200)
 
     def test_consultar_oferta_inexistente(self):
@@ -245,7 +241,6 @@ class testOffers(TestCase):
 
         solicitud_oferta=self.client.get(endpoint_ofertas, headers=headers)
         respuesta_solicitud_oferta=json.loads(solicitud_oferta.get_data())
-        print(respuesta_solicitud_oferta)
         msgError=respuesta_solicitud_oferta["Error"]
         self.assertEqual(solicitud_oferta.status_code, 401)
         self.assertEqual(msgError, "Missing JWT")
@@ -259,7 +254,6 @@ class testOffers(TestCase):
         endpoint_ofertas='/offers?post=a'
         solicitud_oferta=self.client.get(endpoint_ofertas, headers=headers)
         respuesta_solicitud_oferta=json.loads(solicitud_oferta.get_data())
-        #print(respuesta_solicitud_oferta)
         msgError=respuesta_solicitud_oferta["Error"]
         self.assertEqual(solicitud_oferta.status_code, 400)
         self.assertEqual(msgError, "El id de la publicacion no es un numero valido.")
@@ -267,7 +261,6 @@ class testOffers(TestCase):
         endpoint_ofertas='/offers?filter=tu'
         solicitud_oferta=self.client.get(endpoint_ofertas, headers=headers)
         respuesta_solicitud_oferta=json.loads(solicitud_oferta.get_data())
-        #print(respuesta_solicitud_oferta)
         msgError=respuesta_solicitud_oferta["Error"]
         self.assertEqual(solicitud_oferta.status_code, 400)
         self.assertEqual(msgError, "Valor de filtro invalido.")

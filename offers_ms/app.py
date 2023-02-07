@@ -6,8 +6,7 @@ from flask import Flask
 
 app=Flask(__name__)
 app.config['SECRET_KEY'] = '7110c8ae51a4b5af97be6534caef90e4bb9bdcb3380af008f90b23a5d1616bf319bc298105da20fe'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://admin:admin@localhost:5432/OffersDB'  
-#os.getenv("POSTGRES_URL") #'postgresql://admin:admin@localhost:5432/OffersDB'  
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("POSTGRES_URL") #'postgresql://admin:admin@localhost:5432/OffersDB'  
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = 'nativa2023'
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = True
@@ -83,7 +82,6 @@ def authorization_required():
             try:
                 verify_jwt_in_request()    
                 user_jwt=str(int(get_jwt_identity()))
-                print(user_jwt) 
                 return fn(*args, **kwargs)
             except ExpiredSignatureError:
                 return {"Error": "Token Expired"}, 401
@@ -100,7 +98,6 @@ def authorization_required():
 class VistaOffer(Resource):
     @authorization_required()
     def post(self):
-        print("Creacion")
         user_jwt=str(int(get_jwt_identity()))
         postId=request.json.get('postId')
         if postId is None:
@@ -133,41 +130,32 @@ class VistaOffer(Resource):
 class VistaOfferList(Resource):
     @authorization_required()
     def get(self):
-       print("la otra")
        user_jwt=int(get_jwt_identity())
        postIdTemp=request.args.get("post")
        if postIdTemp is not None:
           try:
              postId=int(postIdTemp)
           except Exception as inst:
-             print(type(inst))    # the exception instance
              return {"Error": "El id de la publicacion no es un numero valido."}, 400
 
-       print("Despues parametros")
        filter = request.args.get("filter")
        if filter!=None and filter!='me':
           return {"Error": "Valor de filtro invalido."}, 400
        #if filter==None:
        #   return {"Error:": "Parametro filtro es obligatorio"}, 400
 
-       print("Despues me")
        if filter is not None and postIdTemp is not None:
-          print("Despues ambos")
           return  [offer_schema.dump(offer) for offer in Offer.query.filter(Offer.postId==postId, Offer.userId==user_jwt).all()], 200   #.filter(Offer.postId==postId, Offer.userId==user_jwt).all()
        elif filter is not None:
-          print("Despues filrter")
           return  [offer_schema.dump(offer) for offer in Offer.query.filter(Offer.userId==user_jwt).all()], 200 
        elif postIdTemp is not None:
-          print("Despues postId")
           return  [offer_schema.dump(offer) for offer in Offer.query.filter(Offer.postId==postId).all()], 200           
        else:
-          print("Despues else")
           return  [offer_schema.dump(offer) for offer in Offer.query], 200
 
 class VistaGetOffer(Resource):
     @authorization_required()
     def get(self, id):
-        print("Consulta")
         try:
            offerId=int(id)
         except Exception as inst:
