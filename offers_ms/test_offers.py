@@ -1,4 +1,7 @@
 import json
+import time
+from flask_jwt_extended import create_access_token
+from datetime import timedelta
 
 from unittest import TestCase
 
@@ -8,11 +11,15 @@ class testOffers(TestCase):
 
     def setUp(self):
         self.client=app.test_client()
-        self.token="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY3NTczMTY3MywianRpIjoiOGU1OWJjZmQtNTJlYi00YzQ1LWI1NDUtZTU3MGYxMDBiNTQ0IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6MiwibmJmIjoxNjc1NzMxNjczLCJleHAiOjE2NzU3Mzg4NzN9.iPaNwx0Sp2TcPOyv5p12e7RyPAUDih3lrLxV0mVN43Q"
-        self.tokenexpired="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY3NTY4NDg3NiwianRpIjoiZjdkYzNlN2QtMzFhNy00NWZhLTg3NjItNzIwZDQ0NTUyMWZjIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6MiwibmJmIjoxNjc1Njg0ODc2LCJleHAiOjE2NzU2ODY2NzZ9.fPQFhAK_4k16NqpMGcT2eV-q-PQRUKHrLMiQY-xzDYM"
         self.userId=1
         self.offerId=1
         self.postId=1
+        access_token_expires = timedelta(minutes=120)
+        self.token=create_access_token(identity=self.userId, expires_delta=access_token_expires)
+        access_token_expires = timedelta(seconds=3)
+        self.tokenexpired=create_access_token(identity=self.userId, expires_delta=access_token_expires)
+        #self.token="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY3NTczMTY3MywianRpIjoiOGU1OWJjZmQtNTJlYi00YzQ1LWI1NDUtZTU3MGYxMDBiNTQ0IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6MiwibmJmIjoxNjc1NzMxNjczLCJleHAiOjE2NzU3Mzg4NzN9.iPaNwx0Sp2TcPOyv5p12e7RyPAUDih3lrLxV0mVN43Q"
+        #self.tokenexpired="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY3NTY4NDg3NiwianRpIjoiZjdkYzNlN2QtMzFhNy00NWZhLTg3NjItNzIwZDQ0NTUyMWZjIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6MiwibmJmIjoxNjc1Njg0ODc2LCJleHAiOjE2NzU2ODY2NzZ9.fPQFhAK_4k16NqpMGcT2eV-q-PQRUKHrLMiQY-xzDYM"
 
     def test_ping(self):
         endpoint_ping='/offers/ping'
@@ -243,20 +250,6 @@ class testOffers(TestCase):
         self.assertEqual(solicitud_oferta.status_code, 401)
         self.assertEqual(msgError, "Missing JWT")
 
-    def test_consultar_oferta_contokenexpirado(self):
-        headers={
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer {}'.format(self.tokenexpired)
-        }
-
-        endpoint_ofertas='/offers/{}'.format(self.offerId)
-
-        solicitud_oferta=self.client.get(endpoint_ofertas, headers=headers)
-        respuesta_solicitud_oferta=json.loads(solicitud_oferta.get_data())
-        msgError=respuesta_solicitud_oferta["Error"]
-        self.assertEqual(solicitud_oferta.status_code, 401)
-        self.assertEqual(msgError, "Token Expired")
-
     def test_valida_lista_ofertas(self):
         headers={
             'Content-Type': 'application/json',
@@ -294,3 +287,20 @@ class testOffers(TestCase):
         endpoint_ofertas='/offers?post={}&filter=me'.format(self.postId)
         solicitud_oferta=self.client.get(endpoint_ofertas, headers=headers)
         self.assertEqual(solicitud_oferta.status_code, 200)
+
+    def test_consultar_oferta_contokenexpirado(self):
+        headers={
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer {}'.format(self.tokenexpired)
+        }
+
+        endpoint_ofertas='/offers/{}'.format(self.offerId)
+        for x in range(4):
+            print('.')
+            time.sleep(1)
+
+        solicitud_oferta=self.client.get(endpoint_ofertas, headers=headers)
+        respuesta_solicitud_oferta=json.loads(solicitud_oferta.get_data())
+        msgError=respuesta_solicitud_oferta["Error"]
+        self.assertEqual(solicitud_oferta.status_code, 401)
+        self.assertEqual(msgError, "Token Expired")

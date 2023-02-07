@@ -1,4 +1,4 @@
-FROM python:3.8-alpine
+FROM python       
 
 COPY ./requirements.txt /app/requirements.txt
 COPY ./app.py /app/app.py
@@ -10,7 +10,6 @@ WORKDIR /app
 
 RUN pip install -r requirements.txt
 
-ENV FLASK_ENV=development
 ENV PORT=5003
 ENV SECRET_KEY=nativa2023
 
