@@ -6,6 +6,8 @@ services:
       - "5003:5003"
     environment:
       POSTGRES_URL: postgresql+psycopg2://admin:admin@offersdb:5432/OffersDB
+      SECRET_KEY: nativa2023
+      AMBIENTE: produccion
     restart: always
     depends_on:
       - offersdb
