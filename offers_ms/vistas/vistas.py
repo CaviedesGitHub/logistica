@@ -91,7 +91,7 @@ class VistaOffer(Resource):
            return {"msg":"Falta la oferta por llevar el paquete."}, 400
       
         if postId<0:
-           return {"msg":" Id de la publicacion es invalido."}, 412
+           return {"msg":"Id de la publicacion es invalido."}, 412
         if not(size=='LARGE' or size=='MEDIUM' or size=='SMALL'):
            return {"msg":"Dimension del paquete incorrecta."}, 412
         if offer<=0:
