@@ -10,7 +10,7 @@ from auth_ms.modelos.modelos import db, Usuario, UsuarioSchema
 
 usuario_schema = UsuarioSchema()
 
-access_token_expires = timedelta(minutes=30)
+access_token_expires = timedelta(minutes=120)
 
 class VistaSignIn(Resource):   
     def post(self):
@@ -60,7 +60,7 @@ class VistaLogIn(Resource):
                  if usuario.expireAt>datetime.now():
                     return {"idaa":usuario.id, "token":usuario.token, "expireAt":usuario.expireAt.isoformat()}, 200
                  else:
-                    usuario.expireAt=datetime.now() + timedelta(minutes = 30)
+                    usuario.expireAt=datetime.now() + timedelta(minutes = 120)
                     token_de_acceso = create_access_token(identity=usuario.id, expires_delta=access_token_expires)
                     usuario.token=token_de_acceso
                     db.session.add(usuario)
