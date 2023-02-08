@@ -153,7 +153,7 @@ class testOffers(TestCase):
         self.assertEqual(msg, "El valor de la oferta es invalido.")
 
 
-    def test_crear_oferta(self):
+    def test_acrear_oferta(self):
         headers={
             'Content-Type': 'application/json',
             'Authorization': 'Bearer {}'.format(self.token)
