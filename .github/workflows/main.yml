@@ -41,7 +41,7 @@ jobs:
           env:
              POSTGRES_HOST: localhost
              POSTGRES_PORT: 5432
-             POSTGRES_URL: postgresql+psycopg2://postgres:postgres@:5432/db_test
+             POSTGRES_URL: postgresql+psycopg2://postgres:postgres@localhost:5432/db_test
              AMBIENTE: github
         - name: Tests Coverage
           working-directory: ./offers_ms
