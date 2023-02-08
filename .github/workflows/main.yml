@@ -45,7 +45,9 @@ jobs:
              AMBIENTE: github
         - name: Tests Coverage
           working-directory: ./offers_ms
-          run: python -m coverage run -m unittest discover -s . -v
+          run: |
+             python -m coverage run -m unittest discover -s . -v
+             coverage report --fail-under=80
           env:
              POSTGRES_URL: postgresql+psycopg2://postgres:postgres@localhost:5432/db_test
              AMBIENTE: github
